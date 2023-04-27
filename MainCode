@@ -1,0 +1,175 @@
+import adsk.core, adsk.fusion, adsk.cam, traceback
+
+
+length1 = 3.0 # cm
+radius1 = 5.0 # cm
+centerX1 = 0.0 # cm
+centerY1 = 0.0 # cm
+centerZ1 = 0.0 # cm
+
+
+length2 = 15.0 # cm
+radius2 = 3.0 # cm
+centerX2 = 0.0 # cm
+centerY2 = 0.0 # cm
+centerZ2 = length1 # cm
+
+
+length3 = 20.0 + 5.0 # cm
+radius3 = 3.0 # cm
+centerX3 = 2*radius2 # cm
+centerY3 = -(length1 + length2 - radius3) # cm
+centerZ3 = -radius2 # cm
+
+
+length6 = 15.0 + 5 # cm
+radius6 = 3.0 # cm
+centerX6 = 0.0 # cm
+centerY6 = -(length1+length2-radius3) # cm
+centerZ6 = (length3 - 3*radius3) # cm
+
+
+# Define radius4 to be 70% of the shorter radius of radius3 and radius2.
+radius4 = min(radius3, radius2) * 0.7
+centerZ4 = -2*10
+centerX4 = -(length2)
+centerY4 = 0.0
+
+
+# Define radius4 to be 70% of the shorter radius of radius4 and radius6.
+radius5 = min(radius4, radius6) * 0.7
+centerZ5 = -2*10
+centerX5 = -(length2)
+centerY5 = length3 - 4*radius5
+
+def run(context):
+   ui = None
+   try:
+       app = adsk.core.Application.get()
+       ui  = app.userInterface
+      
+       # Create a new document.
+       doc = app.documents.add(adsk.core.DocumentTypes.FusionDesignDocumentType)
+      
+       # Get the root component of the active design.
+       product = app.activeProduct
+       design = adsk.fusion.Design.cast(product)
+       rootComp = design.rootComponent
+      
+       # Get the extrude features.
+       extrudes = rootComp.features.extrudeFeatures 
+      
+# Create a sketch.
+       sketches = rootComp.sketches
+       sketch1 = sketches.add(rootComp.xYConstructionPlane)
+       sketchCircles = sketch1.sketchCurves.sketchCircles
+       centerPoint1 = adsk.core.Point3D.create(centerX1, centerY1, centerZ1)
+       sketchCircles.addByCenterRadius(centerPoint1, radius1)
+
+
+       # Get the profile defined by the first circle.
+       prof_simple = sketch1.profiles.item(0)
+      
+       # Extrude the profile to a distance of length1 cm.
+       distance = adsk.core.ValueInput.createByReal(length1)
+       extrude_simple = extrudes.addSimple(prof_simple, distance, adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
+       body_simple = extrude_simple.bodies.item(0)
+       body_simple.name = "simple extrude feature"
+      
+# Create a second sketch.
+       sketch2 = sketches.add(rootComp.xYConstructionPlane)
+       sketchCircles2 = sketch2.sketchCurves.sketchCircles
+       centerPoint2 = adsk.core.Point3D.create(centerX2, centerY2, centerZ2)
+       sketchCircles2.addByCenterRadius(centerPoint2, radius2)
+
+
+       # Get the profile defined by the second circle.
+       prof_second = sketch2.profiles.item(0)
+      
+       # Extrude the profile to a distance of length2 cm.
+       distance = adsk.core.ValueInput.createByReal(length2)
+       extrude_second = extrudes.addSimple(prof_second, distance, adsk.fusion.FeatureOperations.JoinFeatureOperation)
+       body_second = extrude_second.bodies.item(0)
+       body_second.name = "second extrude feature"
+      
+# Create a third sketch.
+       sketch3 = sketches.add(rootComp.xZConstructionPlane)
+       sketchCircles3 = sketch3.sketchCurves.sketchCircles
+       centerPoint3 = adsk.core.Point3D.create(centerX3, centerY3, centerZ3)
+       sketchCircles3.addByCenterRadius(centerPoint3, radius3)
+
+
+       # Get the profile defined by the third circle.
+       prof_third = sketch3.profiles.item(0)
+      
+       # Extrude the profile to a distance of length3 cm.
+       distance = adsk.core.ValueInput.createByReal(length3)
+       extrude_third = extrudes.addSimple(prof_third, distance, adsk.fusion.FeatureOperations.JoinFeatureOperation)
+       body_third = extrude_third.bodies.item(0)
+       body_third.name = "third extrude feature"
+
+
+# Create a new sketch.
+       sketch4 = sketches.add(rootComp.yZConstructionPlane)
+       sketchCircles4 = sketch4.sketchCurves.sketchCircles
+       centerPoint4 = adsk.core.Point3D.create(centerX4, centerY4, centerZ4)
+       sketchCircles4.addByCenterRadius(centerPoint4, radius4)
+
+
+       # Get the profile defined by the fourth circle.
+       prof_fourth = sketch4.profiles.item(0)
+
+
+       # Extrude the profile to a distance of 5*(radius2+radius3) cm.
+       distance = adsk.core.ValueInput.createByReal(5*(radius2+radius3))
+       extInput = extrudes.createInput(prof_fourth, adsk.fusion.FeatureOperations.CutFeatureOperation)
+       extInput.setDistanceExtent(False, distance)
+       extrude_fourth = extrudes.add(extInput)
+       body_fourth = extrude_fourth.bodies.item(0)
+       body_fourth.name = "hole extrude feature"
+      
+
+
+# Create a sixth sketch.
+       sketch6 = sketches.add(rootComp.xZConstructionPlane)
+       sketchCircles6 = sketch6.sketchCurves.sketchCircles
+       centerPoint6 = adsk.core.Point3D.create(centerX6, centerY6, centerZ6)
+       sketchCircles6.addByCenterRadius(centerPoint6, radius6)
+
+
+       # Get the profile defined by the sixth circle.
+       prof_sixth = sketch6.profiles.item(0)
+      
+       # Extrude the profile to a distance of length6 cm.
+       distance = adsk.core.ValueInput.createByReal(length6)
+       extrude_sixth = extrudes.addSimple(prof_sixth, distance, adsk.fusion.FeatureOperations.JoinFeatureOperation)
+       body_sixth = extrude_sixth.bodies.item(0)
+       body_sixth.name = "sixth extrude feature"
+
+
+# Create a new sketch.
+       sketch5 = sketches.add(rootComp.yZConstructionPlane)
+       sketchCircles5 = sketch5.sketchCurves.sketchCircles
+       centerPoint5 = adsk.core.Point3D.create(centerX5, centerY5, centerZ5)
+       sketchCircles5.addByCenterRadius(centerPoint5, radius4)
+
+
+       # Get the profile defined by the fourth circle.
+       prof_fifth = sketch5.profiles.item(0)
+
+
+       # Extrude the profile to a distance of 5*(radius2+radius3) cm.
+       distance = adsk.core.ValueInput.createByReal(5*(radius2+radius3))
+       extInput = extrudes.createInput(prof_fifth, adsk.fusion.FeatureOperations.CutFeatureOperation)
+       extInput.setDistanceExtent(False, distance)
+       extrude_fifth = extrudes.add(extInput)
+       body_ffifth = extrude_fifth.bodies.item(0)
+       body_ffifth.name = "hole extrude feature"
+
+
+   except:
+       if ui:
+           ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+
+
+
